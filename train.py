@@ -1,52 +1,42 @@
 import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score
-import os
-import joblib # <-- NEW: Import the joblib library
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+
+# Important: We are importing our OWN function from the other file!
+from preprocess import preprocess_data
 
 def train_model():
     """
-    Loads the processed data, trains a classification model, evaluates it,
-    and saves the trained model to a file.
+    Trains a Linear Regression model on the preprocessed data.
     """
-    # 1. Load the processed data
-    PROCESSED_DATA_PATH = os.path.join("data", "processed", "cancer_dataset.csv")    
-    print(f"Loading data from {PROCESSED_DATA_PATH}...")
-    df = pd.read_csv(PROCESSED_DATA_PATH)
+    print("--- Starting Model Training ---")
 
-    # 2. Separate features (X) and the target (y)
-    X = df.drop('target', axis=1)
-    y = df['target']
-    print("Data separated into features (X) and target (y).")
+    # 1. Get the clean data by calling our preprocessing function
+    X_train, X_test, y_train, y_test = preprocess_data()
 
-    # 3. Split data into training and testing sets
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42
-    )
-    print("Data split into training and testing sets.")
-
-    # 4. Initialize and train the model
-    model = LogisticRegression(max_iter=10000)
-    print("Training the Logistic Regression model...")
+    # 2. Create and train the model
+    print("\nTraining the Linear Regression model...")
+    model = LinearRegression()
     model.fit(X_train, y_train)
     print("Model training complete.")
 
-    # 5. Make predictions on the test set and evaluate
+    # 3. Make predictions on the test data
     predictions = model.predict(X_test)
-    accuracy = accuracy_score(y_test, predictions)
+    print("\nMade predictions on the test set:")
+    print(predictions)
 
-    # --- NEW: Save the trained model ---
-    MODELS_DIR = "models"
-    os.makedirs(MODELS_DIR, exist_ok=True) # Create the 'models' directory
-    MODEL_PATH = os.path.join(MODELS_DIR, "logistic_regression_v1.joblib")
-    print(f"Saving trained model to {MODEL_PATH}")
-    joblib.dump(model, MODEL_PATH)
-    # --- END NEW ---
+    # 4. Evaluate the model
+    mse = mean_squared_error(y_test, predictions)
+    print(f"\nModel Evaluation - Mean Squared Error: {mse:.2f}")
 
-    print("\n--- Model Evaluation ---")
-    print(f"Accuracy on the test set: {accuracy * 100:.2f}%")
-    print("------------------------")
-    
+    print("--- Model Training Complete ---")
+    return model
+
+# This block allows us to run the script directly.
 if __name__ == "__main__":
-    train_model()
+    trained_model = train_model()
+    # In a real application, you would now save 'trained_model' to a file.
+    # For example, using joblib:
+    # import joblib
+    # joblib.dump(trained_model, 'housing_model.pkl')
+    # print("\nModel saved to housing_model.pkl")
